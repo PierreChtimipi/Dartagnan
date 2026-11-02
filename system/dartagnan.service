@@ -1,0 +1,17 @@
+[Unit]
+Description=Dartagnan
+# Ignoré tant que l'application n'existe pas
+ConditionPathExists=/opt/dartagnan/src/dartagnan/__main__.py
+
+[Service]
+User=dartagnan
+WorkingDirectory=/opt/dartagnan
+Environment=PYTHONPATH=/opt/dartagnan/src
+# Affichage direct sur l'écran HDMI, sans serveur graphique
+Environment=SDL_VIDEODRIVER=kmsdrm
+ExecStart=/opt/dartagnan/.venv/bin/python -m dartagnan
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
