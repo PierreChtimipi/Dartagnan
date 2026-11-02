@@ -16,8 +16,8 @@ Trois caméras placées autour de la cible détectent l'impact de chaque fléche
 
 - **Unité de calcul** : Raspberry Pi 4 Model B 8 Go (arm64).
 - **Caméras** : 3 modules USB OV9732, 720p à 30 fps, objectif fixe 100°, UVC. Une caméra par port USB physique, format MJPEG forcé (le YUY2 sature l'USB 2.0).
-- **Éclairage** : bandeau LED WS2812 autour de la cible, avec un flash blanc au moment de la capture.
-- **Affichage** : écran relié au port micro-HDMI de la Pi, avec boutons physiques. Modèle d'écran et câblage des boutons à confirmer.
+- **Éclairage** : bandeau LED blanc autour de la cible, alimenté en USB, sans pilotage logiciel.
+- **Affichage** : écran 24 pouces 1920 × 1080 relié au port micro-HDMI de la Pi, avec boutons physiques. Câblage des boutons à confirmer.
 - **Structure** : arceau caméras et anneau LED imprimés en 3D.
 
 ## Chaîne logicielle
@@ -58,10 +58,31 @@ Secteurs dans le sens horaire depuis le haut, 18° chacun, le 20 étant centré 
 
 ## Système
 
-- Raspberry Pi OS Lite 64 bits, configurée par un script d'installation unique et rejouable.
-- Démarrage automatique par systemd.
+- Raspberry Pi OS Lite 64 bits (Trixie, Debian 13), configurée par `system/install.sh`, script unique et rejouable.
+- OpenCV et pygame installés depuis les paquets de l'OS, utilisés dans un environnement virtuel (`/opt/dartagnan/.venv`).
+- Affichage par pygame directement sur l'écran (KMS/DRM), sans environnement de bureau.
+- Démarrage automatique par le service systemd `dartagnan`. Données persistantes dans `/var/lib/dartagnan`.
 - Caméras identifiées par leur port USB physique (`/dev/v4l/by-path`), jamais par `/dev/videoN`.
 - Pas de Docker ni de conteneurs dans le produit livré.
+- Une image système prête à flasher sera produite en fin de projet, à partir du même script.
+
+## Installation sur la Raspberry Pi
+
+Carte SD préparée avec Raspberry Pi Imager : Raspberry Pi OS Lite 64 bits, nom d'hôte `dartagnan`, utilisateur `dartagnan`, SSH activé avec authentification par mot de passe (accès de secours si une clé manque dans `system/authorized_keys`). Wi-Fi : partage de connexion d'un téléphone en attendant la configuration du réseau de l'école.
+
+Depuis un poste connecté au même réseau :
+
+```sh
+ssh dartagnan@dartagnan.local
+sudo apt-get update && sudo apt-get install -y git
+sudo install -d -o dartagnan -g dartagnan /opt/dartagnan
+git clone https://github.com/PierreChtimipi/Dartagnan.git /opt/dartagnan
+sudo /opt/dartagnan/system/install.sh
+sudo reboot
+```
+
+- Mise à jour : `git pull` dans `/opt/dartagnan`, puis relancer `install.sh`.
+- Accès SSH : ajouter sa clé publique dans `system/authorized_keys`, puis relancer `install.sh`.
 
 ## Organisation du dépôt
 
@@ -74,7 +95,6 @@ Proposée, à valider par l'équipe :
 | `src/dartagnan/geometry` | Calibration, triangulation, calcul du score |
 | `src/dartagnan/game` | Règles du 301 et des autres modes |
 | `src/dartagnan/display` | Affichage sur l'écran et boutons physiques |
-| `src/dartagnan/leds` | Pilotage du bandeau WS2812 |
 | `system` | Script d'installation et services |
 | `tests` | Tests unitaires |
 
@@ -83,4 +103,4 @@ Proposée, à valider par l'équipe :
 - Développement from scratch ou réutilisation de la pile open source Autodarts : décision client.
 - Machine finale : Raspberry Pi 4 (disponible) ou Raspberry Pi 5 (demandée au client).
 - Règles d'entrée et de sortie du 301 (double out ou sortie simple).
-- Pilotage des WS2812 depuis la Pi : bibliothèque et broche.
+- Wi-Fi : configuration du réseau de l'école.
