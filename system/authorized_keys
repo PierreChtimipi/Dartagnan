@@ -1,0 +1,4 @@
+# Clés SSH publiques autorisées pour l'utilisateur dartagnan, une par ligne.
+# Récupérer sa clé : cat ~/.ssh/id_ed25519.pub
+# Appliquer : sudo /opt/dartagnan/system/install.sh
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIl6Mo6kvCbol4rvjjL2hqoneOI11AHRXTT5+0MkZiHP chtim@PChtimipi
