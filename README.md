@@ -68,36 +68,19 @@ Secteurs dans le sens horaire depuis le haut, 18° chacun, le 20 étant centré 
 
 ## Réseau
 
-La Pi reste joignable sans dépendre du réseau du lieu. Le Wi-Fi de l'école n'est pas utilisé (portail captif, enregistrement d'adresse MAC impossible).
-
 | Accès | Usage | Adresse de la Pi |
 |---|---|---|
+| Wi-Fi domestique (box du client) ou partage de connexion d'un téléphone | Internet : installation, mises à jour | `dartagnan.local` |
 | Câble Ethernet direct avec un PC | Développement, secours | `192.168.77.1` |
-| Point d'accès Wi-Fi `Dartagnan` | Développement, secours | `10.42.0.1` |
-| Partage de connexion d'un téléphone | Internet : installation, mises à jour | Attribuée par le téléphone, ou `dartagnan.local` |
+| Point d'accès Wi-Fi `Dartagnan`, créé si aucun Wi-Fi connu | Développement, secours | `10.42.0.1` |
 
-- Ethernet : la Pi distribue une adresse au PC. Ce port est réservé au câble direct : ne pas le brancher sur un réseau existant, la Pi y distribuerait aussi des adresses.
-- Point d'accès : créé si aucun Wi-Fi connu n'est connecté 45 s après le démarrage. Pour revenir à un Wi-Fi connu, redémarrer la Pi à portée de ce réseau.
-- Mot de passe du point d'accès : demandé au premier lancement de `install.sh`, stocké uniquement sur la Pi. Le changer : `sudo nmcli connection modify dartagnan-ap wifi-sec.psk "<nouveau>"`.
-- Ajouter un Wi-Fi connu : `sudo nmcli device wifi connect "<nom>" password "<mot de passe>"`.
+Le Wi-Fi doit être protégé par un simple mot de passe, sans portail captif. Le Wi-Fi de l'école n'est pas utilisé (portail captif, enregistrement d'adresse MAC impossible).
 
-## Installation sur la Raspberry Pi
+## Installation
 
-Carte SD préparée avec Raspberry Pi Imager : Raspberry Pi OS Lite 64 bits, nom d'hôte `dartagnan`, utilisateur `dartagnan`, SSH activé avec authentification par mot de passe (accès de secours si une clé manque dans `system/authorized_keys`), Wi-Fi du partage de connexion d'un téléphone.
+Préparation de la carte SD avec Raspberry Pi Imager, connexion à la Pi, installation et configuration : [docs/installation.md](docs/installation.md).
 
-Depuis un poste connecté au même partage de connexion :
-
-```sh
-ssh dartagnan@dartagnan.local
-sudo apt-get update && sudo apt-get install -y git
-sudo install -d -o dartagnan -g dartagnan /opt/dartagnan
-git clone https://github.com/PierreChtimipi/Dartagnan.git /opt/dartagnan
-sudo /opt/dartagnan/system/install.sh
-sudo reboot
-```
-
-- Mise à jour du jeu, Internet requis : `sudo /opt/dartagnan/system/update.sh` récupère la dernière version de `main`, relance `install.sh` et redémarre le jeu.
-- Accès SSH : ajouter sa clé publique dans `system/authorized_keys`, puis relancer `install.sh`.
+Mise à jour du jeu, Internet requis : `sudo /opt/dartagnan/system/update.sh`.
 
 ## Organisation du dépôt
 
@@ -111,6 +94,7 @@ Proposée, à valider par l'équipe :
 | `src/dartagnan/game` | Règles du 301 et des autres modes |
 | `src/dartagnan/display` | Affichage sur l'écran et boutons physiques |
 | `system` | Script d'installation et services |
+| `docs` | Documentation (installation) |
 | `tests` | Tests unitaires |
 
 ## Points ouverts
