@@ -19,13 +19,37 @@ CMDLINE=/boot/firmware/cmdline.txt
 # Paquets : OpenCV et pygame viennent de l'OS, compilés pour la Pi
 apt-get update
 apt-get install -y --no-install-recommends \
-    git python3-venv python3-opencv python3-pygame v4l-utils
+    git python3-venv python3-opencv python3-pygame v4l-utils dnsmasq-base
 
-# Langue, clavier, fuseau horaire, nom d'hôte
+# Langue, clavier, fuseau horaire, nom d'hôte, pays Wi-Fi (requis pour le point d'accès)
 raspi-config nonint do_change_locale fr_FR.UTF-8
 raspi-config nonint do_configure_keyboard fr
 raspi-config nonint do_change_timezone Europe/Paris
 raspi-config nonint do_hostname dartagnan
+raspi-config nonint do_wifi_country FR
+
+# Ethernet : câble direct avec un PC, la Pi lui distribue une adresse et reste en 192.168.77.1
+nmcli connection show dartagnan-eth >/dev/null 2>&1 \
+    || nmcli connection add type ethernet ifname eth0 con-name dartagnan-eth
+nmcli connection modify dartagnan-eth ipv4.method shared ipv4.addresses 192.168.77.1/24 \
+    ipv6.method disabled connection.autoconnect yes connection.autoconnect-priority 100
+
+# Point d'accès Wi-Fi de secours, activé par wifi-fallback.service (10.42.0.1).
+# Mot de passe demandé une seule fois, conservé uniquement dans le profil NetworkManager.
+if ! nmcli connection show dartagnan-ap >/dev/null 2>&1; then
+    AP_PASSWORD="${AP_PASSWORD:-}"
+    if [ -z "$AP_PASSWORD" ]; then
+        read -rsp "Mot de passe du point d'accès Dartagnan (8 à 63 caractères) : " AP_PASSWORD
+        echo
+    fi
+    [ "${#AP_PASSWORD}" -ge 8 ] && [ "${#AP_PASSWORD}" -le 63 ] \
+        || { echo "Mot de passe invalide : 8 à 63 caractères." >&2; exit 1; }
+    nmcli connection add type wifi ifname wlan0 con-name dartagnan-ap ssid Dartagnan \
+        wifi-sec.key-mgmt wpa-psk wifi-sec.psk "$AP_PASSWORD"
+fi
+nmcli connection modify dartagnan-ap 802-11-wireless.mode ap 802-11-wireless.band bg \
+    wifi-sec.proto rsn wifi-sec.pairwise ccmp wifi-sec.group ccmp \
+    ipv4.method shared ipv4.addresses 10.42.0.1/24 ipv6.method disabled connection.autoconnect no
 
 # Utilisateur : accès caméras (video), écran (render) et clavier ou boutons (input)
 usermod -aG video,render,input "$APP_USER"
@@ -49,9 +73,9 @@ done
 # Données persistantes (calibration, configuration modifiée)
 install -d -o "$APP_USER" -g "$APP_USER" "$DATA_DIR"
 
-# Service de l'application, démarré au boot
-install -m 644 "$SYSTEM_DIR/dartagnan.service" /etc/systemd/system/dartagnan.service
+# Services démarrés au boot : application et point d'accès de secours
+install -m 644 "$SYSTEM_DIR/dartagnan.service" "$SYSTEM_DIR/wifi-fallback.service" /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable dartagnan.service
+systemctl enable dartagnan.service wifi-fallback.service
 
 echo "Installation terminée. Redémarrer : sudo reboot"

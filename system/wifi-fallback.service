@@ -1,0 +1,12 @@
+[Unit]
+Description=Point d'accès Wi-Fi de secours Dartagnan
+After=NetworkManager.service
+Wants=NetworkManager.service
+
+[Service]
+# Laisse le temps de se connecter à un Wi-Fi connu avant de créer le point d'accès
+ExecStartPre=/bin/sleep 45
+ExecStart=/bin/sh -c 'nmcli -t -f TYPE,DEVICE connection show --active | grep -qx "802-11-wireless:wlan0" || nmcli connection up dartagnan-ap'
+
+[Install]
+WantedBy=multi-user.target
