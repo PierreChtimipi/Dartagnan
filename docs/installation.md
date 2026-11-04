@@ -112,7 +112,14 @@ Test de l'écran HDMI (micro-HDMI 0, à côté de l'alimentation) : l'écran doi
 
 ## Configuration réseau sur la Pi
 
-- Ajouter un Wi-Fi connu (autre domicile, autre téléphone) : `sudo nmcli device wifi connect "<nom>" password "<mot de passe>"`.
+- La Pi mémorise plusieurs Wi-Fi et se connecte au premier connu à portée. Ajouter un Wi-Fi (partage de connexion d'un autre membre de l'équipe, autre domicile), même s'il n'est pas à portée, sans couper la connexion en cours :
+
+  ```sh
+  sudo nmcli connection add type wifi ifname wlan0 con-name "<nom>" ssid "<SSID>" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "<mot de passe>"
+  ```
+
+- Lister les Wi-Fi mémorisés : `nmcli connection show`. En supprimer un : `sudo nmcli connection delete "<nom>"`.
+- Un membre de l'équipe dont le Wi-Fi n'est pas encore mémorisé se connecte par le point d'accès `Dartagnan` ou le câble Ethernet pour l'ajouter. Les mots de passe Wi-Fi ne vont jamais dans le dépôt.
 - Changer le mot de passe du point d'accès : `sudo nmcli connection modify dartagnan-ap wifi-sec.psk "<nouveau>"`.
 - Revenir sur un Wi-Fi connu quand le point d'accès est actif : redémarrer la Pi à portée de ce Wi-Fi.
 - Le port Ethernet est réservé au câble direct avec un PC : la Pi y distribue des adresses. Ne pas le brancher sur une box ou un réseau existant.
