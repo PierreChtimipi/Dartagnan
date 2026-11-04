@@ -15,7 +15,7 @@ Trois caméras placées autour de la cible détectent l'impact de chaque fléche
 ## Matériel
 
 - **Unité de calcul** : Raspberry Pi 4 Model B 8 Go (arm64).
-- **Caméras** : 3 modules USB OV9732, 720p à 30 fps, objectif fixe 100°, UVC. Une caméra par port USB physique, format MJPEG forcé (le YUY2 sature l'USB 2.0).
+- **Caméras** : 3 modules USB OV9732, 720p à 30 fps, objectif fixe 100°, UVC. Branchées sur un hub USB relié à un seul port de la Pi, format MJPEG forcé (le YUY2 sature l'USB 2.0). Trois flux MJPEG 1280 × 720 à 30 fps simultanés validés sur Pi 4 via le hub (capture seule avec `v4l2-ctl`, sans traitement).
 - **Éclairage** : bandeau LED blanc autour de la cible, alimenté en USB, sans pilotage logiciel.
 - **Affichage** : écran 24 pouces 1920 × 1080 relié au port micro-HDMI de la Pi, avec boutons physiques. Câblage des boutons à confirmer.
 - **Structure** : arceau caméras et anneau LED imprimés en 3D.
