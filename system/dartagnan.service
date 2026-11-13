@@ -12,6 +12,12 @@ Environment=SDL_VIDEODRIVER=kmsdrm
 ExecStart=/opt/dartagnan/.venv/bin/python -m dartagnan
 Restart=on-failure
 RestartSec=2
+# Durcissement : le jeu n'écrit que dans ses données et ne peut pas gagner de privilèges
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/dartagnan
 
 [Install]
 WantedBy=multi-user.target

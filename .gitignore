@@ -1,2 +1,6 @@
 .venv/
 __pycache__/
+# Base de données de développement (DARTAGNAN_DATA=data)
+data/
+# Kit média de l'école, trop lourd pour le dépôt (52 Mo)
+kit_media_junia_2026/
