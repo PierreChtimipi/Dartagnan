@@ -1,0 +1,9 @@
+[project]
+name = "dartagnan"
+version = "0.1.0"
+description = "Comptage automatique des points d'une cible de fléchettes"
+requires-python = ">=3.13,<3.14"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

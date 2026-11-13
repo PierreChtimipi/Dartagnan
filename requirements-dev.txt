@@ -1,0 +1,5 @@
+# Développement sur PC, avec Python 3.13 (celui de Raspberry Pi OS Trixie).
+# Versions identiques aux paquets Debian Trixie installés sur la Pi par system/install.sh :
+# python3-pygame 2.6.1, python3-pytest 8.3.5.
+pygame==2.6.1
+pytest==8.3.5
