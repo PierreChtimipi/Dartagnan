@@ -107,7 +107,7 @@ Sur la Pi, depuis `/opt/dartagnan`, affichage des caméras sur l'écran :
 PYTHONPATH=src SDL_VIDEODRIVER=kmsdrm .venv/bin/python tools/camera_preview.py
 ```
 
-`calibrate_board.py` : 4 points par caméra sur le bord extérieur du double (limites 20|1, 6|10, 3|19, 11|14), grille de la cible projetée sur l'image, zone visée affichée sous la souris. Résultat dans `data/calibration.json`, photos des caméras (touche P) dans `data/captures/`. Distorsion de l'objectif pas encore corrigée.
+`calibrate_board.py` : 4 points par caméra sur le bord extérieur du double (limites 20|1, 6|10, 3|19, 11|14), grille de la cible projetée sur l'image, zone visée affichée sous la souris. Résultat dans `data/calibration.json`, photos des caméras (touche P) dans `data/captures/`. Distorsion de l'objectif pas encore corrigée. Procédure de test avec les caméras et résultats attendus : [docs/test-calibration.md](docs/test-calibration.md).
 
 Touche A : détection automatique par les couleurs des anneaux double et triple (`geometry/auto_calibration.py`). Sans point placé, la cible est trouvée seule si l'angle donné par `--top` (un par caméra, 0 par défaut : le 20) est à moins de 18° du haut de l'image ; caméras au droit du 20, du 16 et du 15 : `--top 180 54 306` ; avec 4 points placés, même approximatifs, ils sont recalés. Hypothèse : cible rouge et verte, double et triple du 20 en rouge.
 
