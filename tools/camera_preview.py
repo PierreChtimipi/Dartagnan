@@ -3,76 +3,22 @@
 Test matériel : vérifie l'ouverture des caméras par leur port physique, le format
 MJPEG et le débit d'images réel de chaque flux affiché par pygame.
 
-Sur la Pi, depuis SSH :
-    SDL_VIDEODRIVER=kmsdrm /opt/dartagnan/.venv/bin/python tools/camera_preview.py
+Sur la Pi, depuis /opt/dartagnan :
+    PYTHONPATH=src SDL_VIDEODRIVER=kmsdrm .venv/bin/python tools/camera_preview.py
 
-Sans argument, toutes les caméras de /dev/v4l/by-path sont ouvertes. Une source
+Sur PC Windows, caméras par numéro :
+    PYTHONPATH=src .venv/Scripts/python tools/camera_preview.py 0 1 2
+
+Sans argument, toutes les caméras de /dev/v4l/by-path sont ouvertes (Pi). Une source
 peut aussi être un fichier vidéo, pour tester sans caméra. Échap ou Q pour quitter.
 """
 
 import argparse
-import glob
-import os
-import threading
-from pathlib import Path
 
 import cv2
-import numpy as np
 import pygame
 
-
-def find_cameras() -> list[str]:
-    """Chemins by-path des flux image, un par caméra (les liens usbv2 sont des doublons)."""
-    by_device = {
-        os.path.realpath(p): p
-        for p in sorted(glob.glob("/dev/v4l/by-path/*-usb-*-video-index0"))
-    }
-    return sorted(by_device.values())
-
-
-class Camera:
-    """Lit une source en continu dans un fil dédié et garde la dernière image."""
-
-    def __init__(self, source: str, width: int, height: int, fps: int) -> None:
-        self.name = Path(source).name
-        api = cv2.CAP_V4L2 if source.startswith("/dev/") else cv2.CAP_ANY
-        self.capture = cv2.VideoCapture(source, api)
-        if not self.capture.isOpened():
-            raise SystemExit(f"Ouverture impossible : {source}")
-        # Le format doit être imposé avant la résolution pour que le pilote retienne MJPEG
-        self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*"MJPG"))
-        self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-        self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-        self.capture.set(cv2.CAP_PROP_FPS, fps)
-        self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-        fourcc = (
-            int(self.capture.get(cv2.CAP_PROP_FOURCC))
-            .to_bytes(4, "little")
-            .decode(errors="replace")
-        )
-        print(
-            f"{self.name} : {fourcc} {int(self.capture.get(cv2.CAP_PROP_FRAME_WIDTH))}"
-            f"x{int(self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT))} {self.capture.get(cv2.CAP_PROP_FPS):.0f} fps"
-        )
-        self.frame: np.ndarray | None = None
-        self.count = 0
-        self.running = True
-        self.thread = threading.Thread(target=self._read_loop, daemon=True)
-        self.thread.start()
-
-    def _read_loop(self) -> None:
-        while self.running:
-            ok, frame = self.capture.read()
-            if not ok:
-                print(f"{self.name} : flux interrompu")
-                return
-            self.frame = frame
-            self.count += 1
-
-    def close(self) -> None:
-        self.running = False
-        self.thread.join(timeout=1)
-        self.capture.release()
+from dartagnan.capture.camera import Camera, find_cameras
 
 
 def main() -> None:
