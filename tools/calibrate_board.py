@@ -241,11 +241,15 @@ def main() -> None:
                 print(f"Photos enregistrées dans {captures}")
             elif key == ord("s"):
                 data_dir.mkdir(parents=True, exist_ok=True)
+                # Taille réelle de chaque image : celle à laquelle se rapportent les points
                 saved = {
-                    "width": args.width,
-                    "height": args.height,
                     "cameras": [
-                        {"source": c.source, "points": [list(p) for p in pts]}
+                        {
+                            "source": c.source,
+                            "width": None if c.frame is None else c.frame.shape[1],
+                            "height": None if c.frame is None else c.frame.shape[0],
+                            "points": [list(p) for p in pts],
+                        }
                         for c, pts in zip(cameras, points)
                     ],
                 }
