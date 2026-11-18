@@ -51,20 +51,9 @@ Ce qui marche sur le PC n'est pas garanti sur la Pi. En cas d'écart, vérifier 
 
 ## Commandes
 
-Sur PC, Python 3.13 (voir « Développement sur PC » dans le README) :
+Sur PC, Python 3.13 : commandes du jeu, des tests et des outils caméra dans la section « Développement sur PC » du README, en PowerShell (Windows) et en sh (Linux, macOS). Sous Windows, PowerShell 5.1 refuse `&&` et `VAR=valeur commande` : une commande par ligne, variables par `$env:`. Test avec les caméras : `docs/test-calibration.md`.
 
-```sh
-DARTAGNAN_DATA=data PYTHONPATH=src .venv/bin/python -m dartagnan   # fenêtre, boutons au clavier
-.venv/bin/python -m pytest                                          # tests unitaires
-bash -n system/*.sh                                                 # syntaxe des scripts
-```
-
-Caméras branchées sur le PC (numéros Windows, ordre non garanti) :
-
-```sh
-PYTHONPATH=src .venv/Scripts/python tools/camera_preview.py 0 1 2                         # mosaïque des flux
-DARTAGNAN_DATA=data PYTHONPATH=src .venv/Scripts/python tools/calibrate_board.py 0 1 2   # points de la cible
-```
+Syntaxe des scripts de la Pi (Git Bash ou Linux) : `bash -n system/*.sh`.
 
 Une source peut aussi être une image ou une vidéo enregistrée (photos de `data/captures/`), pour travailler sans caméra.
 

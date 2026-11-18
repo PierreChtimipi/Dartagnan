@@ -85,20 +85,32 @@ Versions figées : celles de Debian Trixie sur la Pi (Python 3.13, pygame 2.6.1,
 
 ## Développement sur PC
 
-Python 3.13 requis (celui de la Pi). Les boutons sont simulés au clavier : flèches Gauche / Droite, Entrée ou Espace pour Valider, Échap pour quitter.
+Python 3.13 requis (celui de la Pi). Les boutons sont simulés au clavier : flèches Gauche / Droite, Entrée ou Espace pour Valider, Échap pour quitter. Le jeu s'ouvre dans une fenêtre de 960 × 540 redimensionnable.
+
+Sous Windows (PowerShell) :
+
+```powershell
+py -3.13 -m venv .venv
+.venv\Scripts\python -m pip install -r requirements-dev.txt
+$env:PYTHONPATH="src"; $env:DARTAGNAN_DATA="data"
+.venv\Scripts\python -m dartagnan
+.venv\Scripts\python -m pytest
+```
+
+Sous Linux ou macOS :
 
 ```sh
 python3.13 -m venv .venv
 .venv/bin/pip install -r requirements-dev.txt
-DARTAGNAN_DATA=data PYTHONPATH=src .venv/bin/python -m dartagnan   # fenêtre 960 × 540 redimensionnable
-.venv/bin/python -m pytest                                          # tests
+DARTAGNAN_DATA=data PYTHONPATH=src .venv/bin/python -m dartagnan
+.venv/bin/python -m pytest
 ```
 
-Caméras branchées sur le PC par le hub USB : désignées par leur numéro Windows (`0`, `1`, `2`), dont l'ordre peut changer d'un branchement à l'autre.
+Caméras branchées sur le PC par le hub USB : désignées par leur numéro Windows (`0`, `1`, `2`), dont l'ordre peut changer d'un branchement à l'autre ; la webcam intégrée du PC en occupe un. Dans PowerShell, après les deux variables d'environnement ci-dessus :
 
-```sh
-PYTHONPATH=src .venv/Scripts/python tools/camera_preview.py 0 1 2
-DARTAGNAN_DATA=data PYTHONPATH=src .venv/Scripts/python tools/calibrate_board.py 0 1 2
+```powershell
+.venv\Scripts\python tools\camera_preview.py 1 2 3
+.venv\Scripts\python tools\calibrate_board.py 1 2 3 --top 180 54 306
 ```
 
 Sur la Pi, depuis `/opt/dartagnan`, affichage des caméras sur l'écran :
