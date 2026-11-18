@@ -81,7 +81,7 @@ Sécurité :
 - Déconnexion automatique après 5 minutes sans appui, hors partie en cours.
 - Service systemd durci : pas d'élévation de privilèges, système en lecture seule sauf `/var/lib/dartagnan`.
 
-Versions figées : celles de Debian Trixie sur la Pi (Python 3.13, pygame 2.6.1, pytest 8.3.5), reprises à l'identique dans `requirements-dev.txt` pour le développement sur PC. `install.sh` signale une version de pygame différente.
+Versions figées : celles de Debian Trixie sur la Pi (Python 3.13, pygame 2.6.1, pytest 8.3.5), reprises à l'identique dans `requirements-dev.txt` pour le développement sur PC. `install.sh` signale une version de pygame ou d'OpenCV différente.
 
 ## Développement sur PC
 
@@ -93,6 +93,25 @@ python3.13 -m venv .venv
 DARTAGNAN_DATA=data PYTHONPATH=src .venv/bin/python -m dartagnan   # fenêtre 960 × 540 redimensionnable
 .venv/bin/python -m pytest                                          # tests
 ```
+
+Caméras branchées sur le PC par le hub USB : désignées par leur numéro Windows (`0`, `1`, `2`), dont l'ordre peut changer d'un branchement à l'autre.
+
+```sh
+PYTHONPATH=src .venv/Scripts/python tools/camera_preview.py 0 1 2
+DARTAGNAN_DATA=data PYTHONPATH=src .venv/Scripts/python tools/calibrate_board.py 0 1 2
+```
+
+Sur la Pi, depuis `/opt/dartagnan`, affichage des caméras sur l'écran :
+
+```sh
+PYTHONPATH=src SDL_VIDEODRIVER=kmsdrm .venv/bin/python tools/camera_preview.py
+```
+
+`calibrate_board.py` : 4 points par caméra sur le bord extérieur du double (limites 20|1, 6|10, 3|19, 11|14), grille de la cible projetée sur l'image, zone visée affichée sous la souris. Résultat dans `data/calibration.json`, photos des caméras (touche P) dans `data/captures/`. Distorsion de l'objectif pas encore corrigée.
+
+Touche A : détection automatique par les couleurs des anneaux double et triple (`geometry/auto_calibration.py`). Sans point placé, la cible est trouvée seule si l'angle donné par `--top` (un par caméra, 0 par défaut : le 20) est à moins de 18° du haut de l'image ; caméras au droit du 20, du 16 et du 15 : `--top 180 54 306` ; avec 4 points placés, même approximatifs, ils sont recalés. Hypothèse : cible rouge et verte, double et triple du 20 en rouge.
+
+Simulation sans matériel (caméras virtuelles, images de synthèse) : environnement séparé dans le dossier `simulation/`, branche `feat/simulation`, avec ses hypothèses, résultats et limites dans `simulation/README.md`.
 
 ## Système
 
@@ -122,7 +141,7 @@ Mise à jour du jeu, Internet requis : `sudo /opt/dartagnan/system/update.sh`.
 
 ## Organisation du dépôt
 
-Proposée, à valider par l'équipe. Les dossiers `capture`, `detection` et `geometry` restent à créer.
+Proposée, à valider par l'équipe. Le dossier `detection` reste à créer.
 
 | Chemin | Contenu |
 |---|---|
@@ -134,6 +153,7 @@ Proposée, à valider par l'équipe. Les dossiers `capture`, `detection` et `geo
 | `src/dartagnan/display` | Affichage sur l'écran, boutons physiques et écrans de l'application |
 | `system` | Script d'installation et services |
 | `docs` | Documentation (installation) |
+| `simulation` | Environnement de simulation séparé du jeu (branche `feat/simulation`) |
 | `tests` | Tests unitaires |
 
 ## Points ouverts
