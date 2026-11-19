@@ -38,7 +38,7 @@ Tests unitaires, sans caméra :
 .venv\Scripts\python -m pytest
 ```
 
-Attendu : `55 passed`, aucun `failed`.
+Attendu : `64 passed`, aucun `failed`.
 
 ## Caméras sur le PC
 
@@ -50,7 +50,7 @@ Windows numérote les caméras `0`, `1`, `2`… La webcam intégrée du PC occup
 
 À observer :
 
-- dans le terminal, une ligne par caméra, par exemple `1 : MJPG 1280x720 30 fps` (DirectShow peut annoncer un format inexact) ;
+- dans le terminal, une ligne par caméra, par exemple `1 : MJPG 1280x720 fps non annoncé` (sur PC, le pilote choisit les images par seconde sans les annoncer) ;
 - à l'écran, une mosaïque plein écran avec une tuile par caméra, son numéro et son débit en images par seconde, attendu proche de 30 (à confirmer sur PC) ;
 - Échap ou Q pour quitter.
 
