@@ -218,7 +218,10 @@ def main() -> None:
                 start = board_to_image(placed) if len(placed) == 4 else None
                 result = detect(color_labels(frame), start, tops[index])
                 if result is None:
-                    print(f"{camera.name} : cible non trouvée")
+                    print(
+                        f"{camera.name} : cible non trouvée. Placer les 4 points à peu près"
+                        " (bord extérieur du double), puis A pour les recaler"
+                    )
                 else:
                     found, error, kept = result
                     placed[:] = [

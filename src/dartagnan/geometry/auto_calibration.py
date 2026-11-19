@@ -40,35 +40,40 @@ TOLERANCE = 2.0  # mm, écart au-delà duquel un point est écarté (RANSAC)
 
 
 def color_labels(image: np.ndarray) -> np.ndarray:
-    """Étiquette chaque pixel : RED, GREEN ou NONE. Seuils HSV réglés sur deux photos."""
+    """Étiquette chaque pixel : RED, GREEN ou NONE. Seuils HSV réglés sur deux photos de
+    cibles du commerce et les trois caméras du projet : teinte du rouge resserrée pour
+    écarter l'orange (pieds de l'arceau, teinte 1 à 8), saturation basse pour un rouge
+    délavé, vert jusqu'au turquoise (teinte 86 à 90)."""
     h, s, v = cv2.split(cv2.cvtColor(image, cv2.COLOR_BGR2HSV))
     labels = np.full(h.shape, NONE, np.uint8)
-    labels[((h <= 10) | (h >= 170)) & (s >= 90) & (v >= 60)] = RED
-    labels[(h >= 40) & (h <= 90) & (s >= 60) & (v >= 40)] = GREEN
+    labels[((h <= 3) | (h >= 165)) & (s >= 60) & (v >= 60)] = RED
+    labels[(h >= 40) & (h <= 100) & (s >= 60) & (v >= 40)] = GREEN
     return labels
 
 
 def _find_bull(labels: np.ndarray) -> np.ndarray | None:
-    """Centre du bull (pixel homogène) : la tache rouge la plus entourée de vert. Les
-    segments rouges du double et du triple ne touchent le vert qu'à leurs extrémités."""
-    count, components, stats, centroids = cv2.connectedComponentsWithStats(
+    """Centre du bull (pixel homogène) : la tache rouge entourée de vert dans au moins
+    7 directions sur 8. Un segment rouge du double ou du triple ne touche le vert qu'à
+    ses deux extrémités. Les directions passent l'anneau de fil autour du bull."""
+    count, _, stats, centroids = cv2.connectedComponentsWithStats(
         (labels == RED).astype(np.uint8)
     )
-    best, best_score = None, 0.4  # au moins 40 % du pourtour en vert
+    height, width = labels.shape
+    best, best_hits = None, 6
     for i in range(1, count):
-        x, y, w, h, area = stats[i]
+        _, _, w, h, area = stats[i]
         if area < 4:
             continue
-        # Pourtour assez large pour passer le fil métallique autour du bull
-        m = 2 + round(0.3 * min(w, h))
-        x0, y0 = max(x - m, 0), max(y - m, 0)
-        window = (slice(y0, y + h + m), slice(x0, x + w + m))
-        blob = (components[window] == i).astype(np.uint8)
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * m + 1, 2 * m + 1))
-        border = cv2.dilate(blob, kernel).astype(bool) & ~blob.astype(bool)
-        score = (labels[window][border] == GREEN).mean()
-        if score > best_score:
-            best, best_score = centroids[i], score
+        cx, cy = centroids[i]
+        steps = np.linspace(0, 1.5 * max(w, h), 30)
+        hits = 0
+        for angle in np.radians(np.arange(0, 360, 45)):
+            xs = np.round(cx + steps * math.cos(angle)).astype(int)
+            ys = np.round(cy + steps * math.sin(angle)).astype(int)
+            inside = (xs >= 0) & (xs < width) & (ys >= 0) & (ys < height)
+            hits += bool((labels[ys[inside], xs[inside]] == GREEN).any())
+        if hits > best_hits:
+            best, best_hits = centroids[i], hits
     return None if best is None else np.array([best[0], best[1], 1.0])
 
 
