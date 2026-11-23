@@ -37,6 +37,7 @@ RINGS = (
 )
 SEARCH = 15.0  # mm de part et d'autre d'un anneau pour chercher ses bords
 TOLERANCE = 2.0  # mm, écart au-delà duquel un point est écarté (RANSAC)
+MAX_ERROR = 2.0  # mm, écart moyen au-delà duquel la calibration est refusée
 
 
 def color_labels(image: np.ndarray) -> np.ndarray:
@@ -88,7 +89,10 @@ def initial_homography(labels: np.ndarray) -> np.ndarray | None:
     contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     if not contours:
         return None
-    (cx, cy), (w, h), angle = cv2.fitEllipse(max(contours, key=cv2.contourArea))
+    # Enveloppe convexe : le double, souvent ouvert côté opposé à la caméra, couvre plus
+    # que le triple fermé, alors que la surface de son contour est plus petite
+    outer = max(contours, key=lambda c: cv2.contourArea(cv2.convexHull(c)))
+    (cx, cy), (w, h), angle = cv2.fitEllipse(outer)
     a = math.radians(angle)
     rotation = np.array([[math.cos(a), -math.sin(a)], [math.sin(a), math.cos(a)]])
     ellipse = np.eye(3)  # cercle unité → ellipse
@@ -305,7 +309,11 @@ def refine(
     if rotation is None:
         return None
     residuals = np.concatenate([rings[1], rotation[1]])
-    return rotation[0], float(residuals.mean()), len(residuals)
+    error = float(residuals.mean())
+    # Au-delà, la grille est calée sur le mauvais anneau : mieux vaut un échec signalé
+    if error > MAX_ERROR:
+        return None
+    return rotation[0], error, len(residuals)
 
 
 def detect(
