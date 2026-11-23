@@ -125,6 +125,8 @@ Touche A : détection automatique par les couleurs des anneaux double et triple 
 
 Simulation sans matériel (caméras virtuelles, images de synthèse) : environnement séparé dans le dossier `simulation/`, branche `feat/simulation`, avec ses hypothèses, résultats et limites dans `simulation/README.md`.
 
+Détection sur photos réelles, sans cible ni caméras : séries de photos des trois caméras et zones réelles dans `photos/`, mesure par `tools/detect_photos.py` (mode d'emploi dans `photos/README.md`).
+
 ## Système
 
 - Raspberry Pi OS Lite 64 bits (Trixie, Debian 13), configurée par `system/install.sh`, script unique et rejouable.
@@ -166,6 +168,7 @@ Proposée, à valider par l'équipe. Le dossier `detection` reste à créer.
 | `system` | Script d'installation et services |
 | `docs` | Documentation (installation) |
 | `simulation` | Environnement de simulation séparé du jeu (branche `feat/simulation`) |
+| `photos` | Photos réelles des trois caméras et zones réelles, pour tester la détection |
 | `tests` | Tests unitaires |
 
 ## Points ouverts
