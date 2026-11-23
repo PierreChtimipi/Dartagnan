@@ -42,20 +42,31 @@ class Camera:
         self.capture = _open(source)
         if not self.capture.isOpened():
             raise SystemExit(f"Ouverture impossible : {source}")
-        # Le format doit être imposé avant la résolution pour que le pilote retienne MJPEG
-        self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*"MJPG"))
-        self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-        self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-        self.capture.set(cv2.CAP_PROP_FPS, fps)
+        mjpg = cv2.VideoWriter.fourcc(*"MJPG")
+        if source.isdigit():
+            # DirectShow (PC) : MJPEG retenu seulement s'il est imposé après la résolution,
+            # images/s laissées au pilote (mesuré sur PC : environ 28 img/s par caméra)
+            self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+            self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+            self.capture.set(cv2.CAP_PROP_FOURCC, mjpg)
+        else:
+            # V4L2 (Pi) : le format doit être imposé avant la résolution pour être retenu
+            self.capture.set(cv2.CAP_PROP_FOURCC, mjpg)
+            self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+            self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+            self.capture.set(cv2.CAP_PROP_FPS, fps)
         self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         fourcc = (
             int(self.capture.get(cv2.CAP_PROP_FOURCC))
             .to_bytes(4, "little")
             .decode(errors="replace")
         )
+        announced = self.capture.get(cv2.CAP_PROP_FPS)
+        # DirectShow n'annonce pas d'images/s quand on ne les règle pas
+        rate = f"{announced:.0f} fps" if announced > 0 else "fps non annoncé"
         print(
             f"{self.name} : {fourcc} {int(self.capture.get(cv2.CAP_PROP_FRAME_WIDTH))}"
-            f"x{int(self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT))} {self.capture.get(cv2.CAP_PROP_FPS):.0f} fps"
+            f"x{int(self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT))} {rate}"
         )
         self.frame: np.ndarray | None = None
         self.count = 0

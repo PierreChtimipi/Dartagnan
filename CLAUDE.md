@@ -40,7 +40,7 @@ Comptage automatique des points sur une cible de fléchettes classique : 3 camé
 Ce qui marche sur le PC n'est pas garanti sur la Pi. En cas d'écart, vérifier dans cet ordre :
 
 - **Ouverture des caméras** : numéro DirectShow sur PC, `/dev/v4l/by-path` en V4L2 sur la Pi. Les points de calibration sont enregistrés dans l'ordre des sources, pas par port : vérifier que chaque caméra de `calibration.json` correspond à la bonne prise du hub, sinon refaire la calibration.
-- **Format** : MJPEG forcé des deux côtés. Contrôler la ligne affichée au lancement (`MJPG 1280x720 30 fps`) ; DirectShow peut annoncer un format inexact.
+- **Format** : MJPEG forcé des deux côtés, mais pas dans le même ordre : sous DirectShow (PC), MJPEG n'est retenu qu'imposé après la résolution (sinon YUY2 à 8 img/s, et le troisième flux ne passe plus sur l'USB 2.0) ; sous V4L2 (Pi), avant la résolution. Contrôler la ligne affichée au lancement (`MJPG 1280x720`).
 - **Réglages caméra** (exposition, gain, balance des blancs, netteté) : échelles différentes entre DirectShow et V4L2, valeurs non reportables telles quelles. Sur la Pi : `v4l2-ctl -d <chemin by-path> --list-ctrls`. Comparer une photo de la même scène prise sur chaque machine (touche P de `calibrate_board.py` sur PC). La calibration automatique dépend des couleurs : si elle échoue sur la Pi et pas sur PC, comparer d'abord la balance des blancs et l'exposition, puis les seuils HSV de `color_labels`.
 - **Bande passante USB** : contrôleur différent. Trois flux validés sur la Pi en capture seule ; revérifier avec le traitement (erreur « No space left on device », images figées ou corrompues).
 - **Performances** : à mesurer sur la Pi uniquement (images/s par flux, charge CPU avec `top`, latence impact → affichage). Le PC est beaucoup plus rapide : une détection fluide sur PC ne prouve rien. Calibration automatique : environ 1,5 s par image sur le PC de développement (photos de 800 et 2500 px), durée sur la Pi à mesurer.
@@ -51,20 +51,9 @@ Ce qui marche sur le PC n'est pas garanti sur la Pi. En cas d'écart, vérifier 
 
 ## Commandes
 
-Sur PC, Python 3.13 (voir « Développement sur PC » dans le README) :
+Sur PC, Python 3.13 : commandes du jeu, des tests et des outils caméra dans la section « Développement sur PC » du README, en PowerShell (Windows) et en sh (Linux, macOS). Sous Windows, PowerShell 5.1 refuse `&&` et `VAR=valeur commande` : une commande par ligne, variables par `$env:`. Test avec les caméras : `docs/test-calibration.md`.
 
-```sh
-DARTAGNAN_DATA=data PYTHONPATH=src .venv/bin/python -m dartagnan   # fenêtre, boutons au clavier
-.venv/bin/python -m pytest                                          # tests unitaires
-bash -n system/*.sh                                                 # syntaxe des scripts
-```
-
-Caméras branchées sur le PC (numéros Windows, ordre non garanti) :
-
-```sh
-PYTHONPATH=src .venv/Scripts/python tools/camera_preview.py 0 1 2                         # mosaïque des flux
-DARTAGNAN_DATA=data PYTHONPATH=src .venv/Scripts/python tools/calibrate_board.py 0 1 2   # points de la cible
-```
+Syntaxe des scripts de la Pi (Git Bash ou Linux) : `bash -n system/*.sh`.
 
 Une source peut aussi être une image ou une vidéo enregistrée (photos de `data/captures/`), pour travailler sans caméra.
 

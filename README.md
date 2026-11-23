@@ -85,20 +85,32 @@ Versions figées : celles de Debian Trixie sur la Pi (Python 3.13, pygame 2.6.1,
 
 ## Développement sur PC
 
-Python 3.13 requis (celui de la Pi). Les boutons sont simulés au clavier : flèches Gauche / Droite, Entrée ou Espace pour Valider, Échap pour quitter.
+Python 3.13 requis (celui de la Pi). Les boutons sont simulés au clavier : flèches Gauche / Droite, Entrée ou Espace pour Valider, Échap pour quitter. Le jeu s'ouvre dans une fenêtre de 960 × 540 redimensionnable.
+
+Sous Windows (PowerShell) :
+
+```powershell
+py -3.13 -m venv .venv
+.venv\Scripts\python -m pip install -r requirements-dev.txt
+$env:PYTHONPATH="src"; $env:DARTAGNAN_DATA="data"
+.venv\Scripts\python -m dartagnan
+.venv\Scripts\python -m pytest
+```
+
+Sous Linux ou macOS :
 
 ```sh
 python3.13 -m venv .venv
 .venv/bin/pip install -r requirements-dev.txt
-DARTAGNAN_DATA=data PYTHONPATH=src .venv/bin/python -m dartagnan   # fenêtre 960 × 540 redimensionnable
-.venv/bin/python -m pytest                                          # tests
+DARTAGNAN_DATA=data PYTHONPATH=src .venv/bin/python -m dartagnan
+.venv/bin/python -m pytest
 ```
 
-Caméras branchées sur le PC par le hub USB : désignées par leur numéro Windows (`0`, `1`, `2`), dont l'ordre peut changer d'un branchement à l'autre.
+Caméras branchées sur le PC par le hub USB : désignées par leur numéro Windows (`0`, `1`, `2`), dont l'ordre peut changer d'un branchement à l'autre ; la webcam intégrée du PC en occupe un. Dans PowerShell, après les deux variables d'environnement ci-dessus :
 
-```sh
-PYTHONPATH=src .venv/Scripts/python tools/camera_preview.py 0 1 2
-DARTAGNAN_DATA=data PYTHONPATH=src .venv/Scripts/python tools/calibrate_board.py 0 1 2
+```powershell
+.venv\Scripts\python tools\camera_preview.py 1 2 3
+.venv\Scripts\python tools\calibrate_board.py 1 2 3 --top 180 54 306
 ```
 
 Sur la Pi, depuis `/opt/dartagnan`, affichage des caméras sur l'écran :
@@ -107,7 +119,7 @@ Sur la Pi, depuis `/opt/dartagnan`, affichage des caméras sur l'écran :
 PYTHONPATH=src SDL_VIDEODRIVER=kmsdrm .venv/bin/python tools/camera_preview.py
 ```
 
-`calibrate_board.py` : 4 points par caméra sur le bord extérieur du double (limites 20|1, 6|10, 3|19, 11|14), grille de la cible projetée sur l'image, zone visée affichée sous la souris. Résultat dans `data/calibration.json`, photos des caméras (touche P) dans `data/captures/`. Distorsion de l'objectif pas encore corrigée.
+`calibrate_board.py` : 4 points par caméra sur le bord extérieur du double (limites 20|1, 6|10, 3|19, 11|14), grille de la cible projetée sur l'image, zone visée affichée sous la souris. Résultat dans `data/calibration.json`, photos des caméras (touche P) dans `data/captures/`. Distorsion de l'objectif pas encore corrigée. Procédure de test avec les caméras et résultats attendus : [docs/test-calibration.md](docs/test-calibration.md).
 
 Touche A : détection automatique par les couleurs des anneaux double et triple (`geometry/auto_calibration.py`). Sans point placé, la cible est trouvée seule si l'angle donné par `--top` (un par caméra, 0 par défaut : le 20) est à moins de 18° du haut de l'image ; caméras au droit du 20, du 16 et du 15 : `--top 180 54 306` ; avec 4 points placés, même approximatifs, ils sont recalés. Hypothèse : cible rouge et verte, double et triple du 20 en rouge.
 
