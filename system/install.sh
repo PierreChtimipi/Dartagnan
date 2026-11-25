@@ -27,6 +27,7 @@ check_version() {
         || echo "Attention : $1 $(dpkg-query -W -f='${Version}' "$1") au lieu de $2 attendu." >&2
 }
 check_version python3-pygame 2.6.1
+check_version python3-opencv 4.10.0
 
 # Langue, clavier, fuseau horaire, nom d'hôte, pays Wi-Fi (requis pour le point d'accès)
 raspi-config nonint do_change_locale fr_FR.UTF-8

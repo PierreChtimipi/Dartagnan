@@ -9,6 +9,8 @@ Comptage automatique des points sur une cible de fléchettes classique : 3 camé
 - Partie système : `system/` (installation de la Pi, services systemd, mise à jour) et `docs/installation.md`.
 - Application MVP (section « Application » du README) : 301 solo ou à deux saisi aux boutons, comptes pseudo + PIN, historique, profil, calibration en maquette. Pas encore de caméras.
 - L'application est sur la branche `feat/application-mvp` (5 commits, pas encore poussée ni relue par l'équipe). Testée sur PC uniquement : 28 tests unitaires et parcours complet simulé.
+- Branche `feat/calibration-cible` (depuis `feat/application-mvp`) : géométrie de la cible (`geometry/board.py`), passage image ↔ cible (`geometry/calibration.py`), acquisition partagée (`capture/camera.py`), calibration automatique (`geometry/auto_calibration.py`), outil de placement des points `tools/calibrate_board.py`. Vérifiés sur images de test et deux photos de cible (de face et de biais), pas encore avec les caméras.
+- Branche `feat/simulation` (depuis `feat/calibration-cible`) : environnement de simulation `simulation/` (caméras virtuelles, images de synthèse) et prototype de détection (`detection/dart.py`, `geometry/triangulation.py`), validé en simulation seulement. Voir `simulation/README.md`.
 - Prochain jalon : soutenance N°2 (1-2 déc. 2026) — détection, score 301 en solo, affichage temps réel.
 
 ## Décisions prises (ne pas remettre en cause sans l'utilisateur)
@@ -18,7 +20,12 @@ Comptage automatique des points sur une cible de fléchettes classique : 3 camé
 - **Comptes** : pseudo + code PIN de 4 à 6 chiffres, pas de mot de passe ni d'OIDC. Le joueur 2 est choisi dans la liste **sans code** : choix assumé, même si n'importe qui peut ajouter une partie à l'historique d'un autre.
 - **301** : sortie simple ou double out choisie au lancement de chaque partie. Saisie possible : 1 à 20, 25, Bull (compte comme un double) et Raté.
 - **Profil** : parties jouées, victoires à deux, moyenne par volée (bust = 0), meilleure volée. Seules les parties finies comptent ; les parties abandonnées restent visibles dans l'historique.
-- **Calibration** : maquette sans fonction, en attendant la chaîne caméras.
+- **Calibration** (écran de l'application) : maquette sans fonction, en attendant la chaîne caméras.
+- **Développement de la détection** : sur PC, avec le hub et les 3 caméras branchés au PC. Vérification sur la Pi à chaque étape importante, sans commit (copie par `scp` ou VS Code Remote-SSH). Commit et push seulement une fois validé.
+- **Calibration** (outil de développement) : 4 points par caméra sur le bord extérieur du double, aux limites 20|1, 6|10, 3|19, 11|14, puis homographie image → cible. Dimensions et ordre des secteurs uniquement dans `geometry/board.py`.
+- **Simulation séparée de la réalité** : tout ce qui est de synthèse (caméras virtuelles, rendu, outil et tests de simulation) vit dans `simulation/` ; ses images dans `data/simulation/`, jamais dans `data/captures/` (photos réelles). Le code du jeu (`src/dartagnan/`) n'importe jamais `simulation/`. Règles, hypothèses et résultats dans `simulation/README.md`, à tenir à jour.
+- **Détection prototypée** : méthode des droites projetées, retenue pour l'essai seulement (le choix définitif reste un point ouvert, à présenter à l'équipe), validée en simulation seulement.
+- **Calibration automatique** (`geometry/auto_calibration.py`) : hypothèses et usage dans le README. Si elle échoue sur de vraies images, régler d'abord les seuils HSV de `color_labels`, réglés sur deux photos seulement.
 - **Boutons** : câblage pas encore décidé, simulés au clavier (`KEYS` dans `display/app.py`). Brancher les vrais boutons sur `Buttons.press` / `Buttons.release` sans toucher aux écrans.
 
 ## À vérifier ou à faire
@@ -26,16 +33,29 @@ Comptage automatique des points sur une cible de fléchettes classique : 3 camé
 - Premier lancement sur la vraie Pi : affichage KMS/DRM, police Montserrat et durcissement du service (`ProtectSystem=strict`, `ProtectHome=yes`) jamais testés. En cas d'échec : `journalctl -u dartagnan`.
 - Logo : le « JUNIA simple blanc » du kit est un JPG blanc sur fond blanc, inutilisable. `display/assets/logo_junia_blanc.png` a été recréé en blanc à partir du logo violet officiel. Demander à l'école un PNG blanc officiel et le remplacer.
 - Une partie en cours est perdue si la Pi s'éteint : elle n'est enregistrée qu'en quittant l'écran de fin (pour permettre la correction de la dernière fléchette) ou en abandonnant.
+- Distorsion de l'objectif (100°) non corrigée : si la grille projetée par `calibrate_board.py` s'écarte des fils de la cible loin des 4 points, ajouter la calibration intrinsèque (damier).
+
+## Passage du PC à la Pi : points à vérifier
+
+Ce qui marche sur le PC n'est pas garanti sur la Pi. En cas d'écart, vérifier dans cet ordre :
+
+- **Ouverture des caméras** : numéro DirectShow sur PC, `/dev/v4l/by-path` en V4L2 sur la Pi. Les points de calibration sont enregistrés dans l'ordre des sources, pas par port : vérifier que chaque caméra de `calibration.json` correspond à la bonne prise du hub, sinon refaire la calibration.
+- **Format** : MJPEG forcé des deux côtés, mais pas dans le même ordre : sous DirectShow (PC), MJPEG n'est retenu qu'imposé après la résolution (sinon YUY2 à 8 img/s, et le troisième flux ne passe plus sur l'USB 2.0) ; sous V4L2 (Pi), avant la résolution. Contrôler la ligne affichée au lancement (`MJPG 1280x720`).
+- **Réglages caméra** (exposition, gain, balance des blancs, netteté) : échelles différentes entre DirectShow et V4L2, valeurs non reportables telles quelles. Sur la Pi : `v4l2-ctl -d <chemin by-path> --list-ctrls`. Comparer une photo de la même scène prise sur chaque machine (touche P de `calibrate_board.py` sur PC). La calibration automatique dépend des couleurs : si elle échoue sur la Pi et pas sur PC, comparer d'abord la balance des blancs et l'exposition, puis les seuils HSV de `color_labels`.
+- **Bande passante USB** : contrôleur différent. Trois flux validés sur la Pi en capture seule ; revérifier avec le traitement (erreur « No space left on device », images figées ou corrompues).
+- **Performances** : à mesurer sur la Pi uniquement (images/s par flux, charge CPU avec `top`, latence impact → affichage). Le PC est beaucoup plus rapide : une détection fluide sur PC ne prouve rien. Calibration automatique : environ 1,5 s par image sur le PC de développement (photos de 800 et 2500 px), durée sur la Pi à mesurer.
+- **Versions** : `opencv-python` et `numpy` de pip sur PC, paquets Debian sur la Pi (`dpkg-query -W python3-opencv python3-numpy`). Compilations différentes : résultats à recontrôler sur les mêmes images.
+- **Affichage** : fenêtres OpenCV (`cv2.imshow`) sur PC seulement, la Pi n'a pas de bureau. Tout ce qui doit tourner sur la Pi affiche par pygame (KMS/DRM).
+- **Calibration** : valable tant que caméras et cible ne bougent pas, à la même résolution (1280 × 720). Sur la Pi, le fichier va dans `/var/lib/dartagnan/calibration.json` (copie depuis le PC à confirmer).
+- **Fichiers** : fins de ligne LF, bit exécutable des scripts (`git add --chmod=+x`), chemins Windows absents du code.
 
 ## Commandes
 
-Sur PC, Python 3.13 (voir « Développement sur PC » dans le README) :
+Sur PC, Python 3.13 : commandes du jeu, des tests et des outils caméra dans la section « Développement sur PC » du README, en PowerShell (Windows) et en sh (Linux, macOS). Sous Windows, PowerShell 5.1 refuse `&&` et `VAR=valeur commande` : une commande par ligne, variables par `$env:`. Test avec les caméras : `docs/test-calibration.md`.
 
-```sh
-DARTAGNAN_DATA=data PYTHONPATH=src .venv/bin/python -m dartagnan   # fenêtre, boutons au clavier
-.venv/bin/python -m pytest                                          # tests unitaires
-bash -n system/*.sh                                                 # syntaxe des scripts
-```
+Syntaxe des scripts de la Pi (Git Bash ou Linux) : `bash -n system/*.sh`.
+
+Une source peut aussi être une image ou une vidéo enregistrée (photos de `data/captures/`), pour travailler sans caméra.
 
 Pour vérifier un écran sans l'ouvrir : `SDL_VIDEODRIVER=dummy`, dessiner l'écran sur une `pygame.Surface` de 1920 × 1080 et l'enregistrer avec `pygame.image.save`.
 
