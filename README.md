@@ -155,7 +155,7 @@ Mise à jour du jeu, Internet requis : `sudo /opt/dartagnan/system/update.sh`.
 
 ## Organisation du dépôt
 
-Proposée, à valider par l'équipe. Le dossier `detection` reste à créer.
+Proposée, à valider par l'équipe.
 
 | Chemin | Contenu |
 |---|---|
