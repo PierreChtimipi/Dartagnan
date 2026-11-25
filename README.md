@@ -125,7 +125,7 @@ Touche A : détection automatique par les couleurs des anneaux double et triple 
 
 Simulation sans matériel (caméras virtuelles, images de synthèse) : environnement séparé dans le dossier `simulation/`, branche `feat/simulation`, avec ses hypothèses, résultats et limites dans `simulation/README.md`.
 
-Détection sur photos réelles, sans cible ni caméras : séries de photos des trois caméras et zones réelles dans `photos/`, mesure par `tools/detect_photos.py` (mode d'emploi dans `photos/README.md`).
+Détection sur photos réelles, sans cible ni caméras : séries de photos des trois caméras et zones réelles dans `photos/`, mesure par `tools/detect_photos.py`, enregistrement de nouvelles volées avec affichage en direct des caméras et des impacts par `tools/record_volleys.py` (mode d'emploi dans `photos/README.md`).
 
 ## Système
 
