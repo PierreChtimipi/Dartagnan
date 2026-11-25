@@ -16,10 +16,17 @@ CMDLINE=/boot/firmware/cmdline.txt
 [ "$VERSION_CODENAME" = trixie ] && [ "$(dpkg --print-architecture)" = arm64 ] \
     || { echo "Raspberry Pi OS Lite 64 bits (Trixie) attendue." >&2; exit 1; }
 
-# Paquets : OpenCV et pygame viennent de l'OS, compilés pour la Pi
+# Paquets : OpenCV, pygame et la police Montserrat viennent de l'OS, compilés pour la Pi
 apt-get update
 apt-get install -y --no-install-recommends \
-    git python3-venv python3-opencv python3-pygame v4l-utils dnsmasq-base
+    git python3-venv python3-opencv python3-pygame fonts-montserrat v4l-utils dnsmasq-base
+
+# Versions figées : celles de Debian Trixie, aussi utilisées en développement (requirements-dev.txt)
+check_version() {
+    dpkg-query -W -f='${Version}' "$1" | grep -q "^$2" \
+        || echo "Attention : $1 $(dpkg-query -W -f='${Version}' "$1") au lieu de $2 attendu." >&2
+}
+check_version python3-pygame 2.6.1
 
 # Langue, clavier, fuseau horaire, nom d'hôte, pays Wi-Fi (requis pour le point d'accès)
 raspi-config nonint do_change_locale fr_FR.UTF-8
@@ -70,8 +77,8 @@ done
 # Environnement Python : accès aux paquets de l'OS (OpenCV, pygame)
 [ -d "$APP_DIR/.venv" ] || sudo -u "$APP_USER" python3 -m venv --system-site-packages "$APP_DIR/.venv"
 
-# Données persistantes (calibration, configuration modifiée)
-install -d -o "$APP_USER" -g "$APP_USER" "$DATA_DIR"
+# Données persistantes (comptes, parties, calibration), lisibles par le seul utilisateur du jeu
+install -d -m 700 -o "$APP_USER" -g "$APP_USER" "$DATA_DIR"
 
 # Services démarrés au boot : application et point d'accès de secours
 install -m 644 "$SYSTEM_DIR/dartagnan.service" "$SYSTEM_DIR/wifi-fallback.service" /etc/systemd/system/

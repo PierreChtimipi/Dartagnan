@@ -54,7 +54,45 @@ Secteurs dans le sens horaire depuis le haut, 18° chacun, le 20 étant centré 
 
 - Chaque joueur part de 301 et lance 3 fléchettes par tour. Le score de chaque fléchette est soustrait.
 - Il faut atteindre exactement 0. En cas de dépassement (bust), le score revient à sa valeur du début du tour.
+- Sortie choisie au lancement de la partie : sortie simple, ou double out (finir sur un double ou le Bull ; rester à 1 est un bust).
 - Une correction manuelle d'un lancer reste possible.
+
+## Application (MVP)
+
+Application pygame plein écran sur l'écran HDMI, pilotée par trois boutons : Gauche, Droite, Valider.
+
+| Geste sur Valider | Dans les menus | Pendant la partie |
+|---|---|---|
+| Appui court | Valider | Simple |
+| Deux appuis rapides | Valider | Double |
+| Appui long (0,6 s) | Retour | Triple |
+
+- **Comptes** : pseudo (3 à 16 caractères) et code PIN de 4 à 6 chiffres, composés aux boutons. Le joueur 2 est choisi dans la liste des comptes, sans code.
+- **Partie** : 301 en solo ou à deux. Pavé de saisie : 1 à 20, 25, Bull, Raté, Annuler (dernière fléchette), Quitter.
+- **Mes parties** : historique et détail de chaque volée. **Profil** : parties jouées, victoires à deux, moyenne par volée, meilleure volée.
+- **Calibration** : maquette, en attendant la chaîne caméras.
+- **Charte graphique** JUNIA : violet `#3F2A56` dominant, orange `#FF5C39` pour la sélection, police Montserrat, logo blanc sur fond violet.
+
+Sécurité :
+
+- Code PIN jamais stocké en clair : empreinte scrypt avec sel aléatoire par compte. Compte bloqué 5 minutes après 5 codes faux.
+- Requêtes SQL paramétrées, saisies validées (caractères autorisés, longueurs).
+- Base SQLite `/var/lib/dartagnan/dartagnan.db` lisible par le seul utilisateur `dartagnan` (dossier en 700, fichier en 600).
+- Déconnexion automatique après 5 minutes sans appui, hors partie en cours.
+- Service systemd durci : pas d'élévation de privilèges, système en lecture seule sauf `/var/lib/dartagnan`.
+
+Versions figées : celles de Debian Trixie sur la Pi (Python 3.13, pygame 2.6.1, pytest 8.3.5), reprises à l'identique dans `requirements-dev.txt` pour le développement sur PC. `install.sh` signale une version de pygame différente.
+
+## Développement sur PC
+
+Python 3.13 requis (celui de la Pi). Les boutons sont simulés au clavier : flèches Gauche / Droite, Entrée ou Espace pour Valider, Échap pour quitter.
+
+```sh
+python3.13 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
+DARTAGNAN_DATA=data PYTHONPATH=src .venv/bin/python -m dartagnan   # fenêtre 960 × 540 redimensionnable
+.venv/bin/python -m pytest                                          # tests
+```
 
 ## Système
 
@@ -84,7 +122,7 @@ Mise à jour du jeu, Internet requis : `sudo /opt/dartagnan/system/update.sh`.
 
 ## Organisation du dépôt
 
-Proposée, à valider par l'équipe :
+Proposée, à valider par l'équipe. Les dossiers `capture`, `detection` et `geometry` restent à créer.
 
 | Chemin | Contenu |
 |---|---|
@@ -92,7 +130,8 @@ Proposée, à valider par l'équipe :
 | `src/dartagnan/detection` | Déclenchement et détection OpenCV |
 | `src/dartagnan/geometry` | Calibration, triangulation, calcul du score |
 | `src/dartagnan/game` | Règles du 301 et des autres modes |
-| `src/dartagnan/display` | Affichage sur l'écran et boutons physiques |
+| `src/dartagnan/storage` | Base SQLite : comptes, historique, statistiques |
+| `src/dartagnan/display` | Affichage sur l'écran, boutons physiques et écrans de l'application |
 | `system` | Script d'installation et services |
 | `docs` | Documentation (installation) |
 | `tests` | Tests unitaires |
@@ -101,4 +140,4 @@ Proposée, à valider par l'équipe :
 
 - Développement from scratch ou réutilisation de la pile open source Autodarts : décision client.
 - Machine finale : Raspberry Pi 4 (disponible) ou Raspberry Pi 5 (demandée au client).
-- Règles d'entrée et de sortie du 301 (double out ou sortie simple).
+- Câblage des trois boutons (GPIO ou boîtier USB) : simulés au clavier en attendant, dans `display/buttons.py` et `display/app.py`.
