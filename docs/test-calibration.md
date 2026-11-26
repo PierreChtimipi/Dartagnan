@@ -1,6 +1,6 @@
 # Test des caméras et de la calibration
 
-Vérification, sur la branche `feat/calibration-cible`, des trois caméras sur le PC puis sur la Pi, et de la calibration manuelle et automatique de la cible. Les résultats sont à relever dans le tableau en fin de document.
+Vérification des trois caméras sur le PC puis sur la Pi, et de la calibration manuelle et automatique de la cible. Les résultats sont à relever dans le tableau en fin de document. Suite, séance d'essais de la détection : [test-detection.md](test-detection.md).
 
 ## Prérequis
 
@@ -14,7 +14,7 @@ Logiciel, dans PowerShell depuis le dossier du dépôt :
 
 ```powershell
 git fetch origin
-git switch feat/calibration-cible
+git switch main
 git pull
 ```
 
@@ -38,7 +38,7 @@ Tests unitaires, sans caméra :
 .venv\Scripts\python -m pytest
 ```
 
-Attendu : `64 passed`, aucun `failed`.
+Attendu : `81 passed` sur `main`, aucun `failed`.
 
 ## Caméras sur le PC
 
@@ -94,12 +94,11 @@ Une caméra est affichée à la fois. Touches : A détection automatique, Tab ca
 
 ## Caméras sur la Pi
 
-Hub branché sur la Pi, en SSH avec l'utilisateur `dartagnan`. Le jeu tourne en service et occupe l'écran : l'arrêter le temps du test.
+Hub branché sur la Pi, en SSH avec l'utilisateur `dartagnan`. Mise à jour sur `main` (Internet requis), puis arrêt du jeu, qui occupe l'écran, le temps du test.
 
 ```sh
+sudo /opt/dartagnan/system/update.sh
 sudo systemctl stop dartagnan
-git -C /opt/dartagnan fetch origin
-git -C /opt/dartagnan switch feat/calibration-cible
 ls -l /dev/v4l/by-path/
 cd /opt/dartagnan
 PYTHONPATH=src SDL_VIDEODRIVER=kmsdrm .venv/bin/python tools/camera_preview.py
@@ -114,10 +113,10 @@ vcgencmd get_throttled
 
 L'outil de calibration ne fonctionne pas sur la Pi, qui n'a pas de bureau. Une calibration faite sur le PC reste valable si caméras et cible n'ont pas bougé, mais l'ordre des caméras diffère (numéros Windows sur PC, ports `by-path` sur la Pi) : son usage sur la Pi est à confirmer. Les autres écarts possibles entre PC et Pi sont listés dans la section « Passage du PC à la Pi » de `CLAUDE.md`.
 
-Pour remettre la Pi sur la version principale et relancer le jeu, Internet requis :
+Pour relancer le jeu :
 
 ```sh
-sudo /opt/dartagnan/system/update.sh
+sudo systemctl start dartagnan
 ```
 
 ## Résultats à relever

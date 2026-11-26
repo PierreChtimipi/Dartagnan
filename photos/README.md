@@ -33,25 +33,6 @@ Une amélioration de la détection se juge en relançant la commande sur toutes 
 
 ## Ajouter une série
 
-Enregistrement en direct, caméras et cible fixes :
-
-```powershell
-$env:PYTHONPATH="src"; $env:DARTAGNAN_DATA="data"
-.venv\Scripts\python tools\record_volleys.py 1 2 3 --top 180 54 306
-```
-
-Plein écran en 1920 × 1080 : les trois caméras à gauche (grille de la cible calibrée, axe de la dernière fléchette), au centre une cible de face avec la droite projetée par chaque caméra et les impacts, à droite la volée en cours, les zones détectées et le bilan de la séance. Impact en vert si la zone réelle tapée correspond, en rouge sinon.
-
-| Moment | Action |
-|---|---|
-| Cible vide, personne devant | Entrée : calibration des trois caméras, première volée |
-| Fléchette plantée | photo automatique quand l'image redevient stable, zone détectée affichée (3 par volée) |
-| Fausse alerte (main, fléchette tombée) | Suppr : photos et fléchette supprimées |
-| Fin de volée | taper les zones réelles dans l'ordre (`20 T19 D5`, `25`, `Bull`, `Out`), une par photo, retirer les fléchettes, Entrée |
-| Fin de séance | Échap : zones de la dernière volée enregistrées si complètes |
-
-Chaque volée va dans `data/captures/<jjmmaa-hhmm>-voleeN/` (exemple : `251126-1518-volee3`, numéros à la suite dans la journée), au format de ce dossier. Sans zones tapées, la volée est gardée sans `points.txt`.
-
-Limites : une fléchette hors de la cible (mur, arceau) ne déclenche rien, ne pas taper sa zone ; deux fléchettes lancées sans que l'image se stabilise entre elles donnent une seule photo.
+Nouvelles volées enregistrées en direct par `tools/record_volleys.py` dans `data/captures/<jjmmaa-hhmm>-voleeN/` (exemple : `251126-1518-volee3`), au format de ce dossier ; sans zones tapées, la volée est gardée sans `points.txt`. Procédure de séance : [docs/test-detection.md](../docs/test-detection.md).
 
 Les volées utiles sont ensuite copiées ici, une par dossier `<date>-serie<n>`.

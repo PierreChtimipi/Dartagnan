@@ -11,12 +11,11 @@ Les résultats valent pour des images idéales. Ils montrent que la méthode tie
 | Code | `src/dartagnan/`, `tools/` | `simulation/` (ce dossier) |
 | Images | `photos/` : séries versionnées des trois caméras, avec zones réelles ; `data/captures/` : photos locales | `data/simulation/` : vues de synthèse générées |
 | Tests | `tests/`, `tools/detect_photos.py` sur `photos/` | `simulation/test_simulation.py` |
-| Branche | `feat/calibration-cible` | `feat/simulation` |
 
 - Le code du jeu (`src/dartagnan/`) ne dépend jamais de ce dossier ; la simulation utilise le code du jeu tel quel.
 - Aucune image de synthèse dans `data/captures/`, aucune photo réelle dans `data/simulation/`.
 - Un résultat obtenu ici est toujours présenté comme « en simulation », jamais comme mesuré sur le matériel.
-- La détection par droites projetées (`src/dartagnan/detection/dart.py`, `src/dartagnan/geometry/triangulation.py`) reste dans la branche `feat/simulation` tant qu'elle n'est pas retenue par l'équipe. Premiers essais sur photos réelles : 5 zones justes sur 9 (`photos/README.md`).
+- La détection par droites projetées (`src/dartagnan/detection/dart.py`, `src/dartagnan/geometry/triangulation.py`) est dans `main` comme prototype : méthode à valider par l'équipe. Premiers essais sur photos réelles : 5 zones justes sur 9 (`photos/README.md`).
 
 ## Hypothèses de la simulation
 

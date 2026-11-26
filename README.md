@@ -123,9 +123,9 @@ PYTHONPATH=src SDL_VIDEODRIVER=kmsdrm .venv/bin/python tools/camera_preview.py
 
 Touche A : détection automatique par les couleurs des anneaux double et triple (`geometry/auto_calibration.py`). Sans point placé, la cible est trouvée seule si l'angle donné par `--top` (un par caméra, 0 par défaut : le 20) est à moins de 18° du haut de l'image ; caméras au droit du 20, du 16 et du 15 : `--top 180 54 306` ; avec 4 points placés, même approximatifs, ils sont recalés. Hypothèse : cible rouge et verte, double et triple du 20 en rouge.
 
-Simulation sans matériel (caméras virtuelles, images de synthèse) : environnement séparé dans le dossier `simulation/`, branche `feat/simulation`, avec ses hypothèses, résultats et limites dans `simulation/README.md`.
+Simulation sans matériel (caméras virtuelles, images de synthèse) : environnement séparé dans le dossier `simulation/`, avec ses hypothèses, résultats et limites dans `simulation/README.md`.
 
-Détection sur photos réelles, sans cible ni caméras : séries de photos des trois caméras et zones réelles dans `photos/`, mesure par `tools/detect_photos.py`, enregistrement de nouvelles volées avec affichage en direct des caméras et des impacts par `tools/record_volleys.py` (mode d'emploi dans `photos/README.md`).
+Détection sur photos réelles, sans cible ni caméras : séries de photos des trois caméras et zones réelles dans `photos/`, mesure par `tools/detect_photos.py`, enregistrement de nouvelles volées avec affichage en direct des caméras et des impacts par `tools/record_volleys.py` (séance d'essais : [docs/test-detection.md](docs/test-detection.md)).
 
 ## Système
 
@@ -167,7 +167,7 @@ Proposée, à valider par l'équipe.
 | `src/dartagnan/display` | Affichage sur l'écran, boutons physiques et écrans de l'application |
 | `system` | Script d'installation et services |
 | `docs` | Documentation (installation) |
-| `simulation` | Environnement de simulation séparé du jeu (branche `feat/simulation`) |
+| `simulation` | Environnement de simulation séparé du jeu |
 | `photos` | Photos réelles des trois caméras et zones réelles, pour tester la détection |
 | `tests` | Tests unitaires |
 

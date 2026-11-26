@@ -8,10 +8,10 @@ Comptage automatique des points sur une cible de fléchettes classique : 3 camé
 
 - Partie système : `system/` (installation de la Pi, services systemd, mise à jour) et `docs/installation.md`.
 - Application MVP (section « Application » du README) : 301 solo ou à deux saisi aux boutons, comptes pseudo + PIN, historique, profil, calibration en maquette. Pas encore de caméras.
-- L'application est sur la branche `feat/application-mvp` (poussée, pas encore relue par l'équipe). Testée sur PC uniquement : 28 tests unitaires et parcours complet simulé.
-- Branche `feat/calibration-cible` (depuis `feat/application-mvp`) : géométrie de la cible (`geometry/board.py`), passage image ↔ cible (`geometry/calibration.py`), acquisition partagée (`capture/camera.py`), calibration automatique (`geometry/auto_calibration.py`), outil de placement des points `tools/calibrate_board.py`. Vérifiés sur images de test et deux photos de cible (de face et de biais), pas encore avec les caméras.
-- Branche `feat/simulation` (depuis `feat/calibration-cible`) : environnement de simulation `simulation/` (caméras virtuelles, images de synthèse) et prototype de détection (`detection/dart.py`, `geometry/triangulation.py`). Voir `simulation/README.md`. Photos réelles des trois caméras et zones réelles dans `photos/`, détection mesurée par `tools/detect_photos.py` : 5 zones justes sur 9 (voir `photos/README.md`).
-- Branche `feat/enregistrement-volees` (depuis `feat/simulation`) : déclenchement à l'impact (`detection/trigger.py`) et enregistrement des volées avec affichage en direct, plein écran (`tools/record_volleys.py`, mode d'emploi dans `photos/README.md`). Vérifié avec des caméras simulées seulement.
+- Application fusionnée dans `main` (PR #4). Testée sur PC uniquement : 28 tests unitaires et parcours complet simulé.
+- Calibration, fusionnée dans `main` (PR #5) : géométrie de la cible (`geometry/board.py`), passage image ↔ cible (`geometry/calibration.py`), acquisition partagée (`capture/camera.py`), calibration automatique (`geometry/auto_calibration.py`), outil de placement des points `tools/calibrate_board.py`. Vérifiés avec les caméras sur PC, pas encore sur la Pi.
+- Simulation, fusionnée dans `main` (PR #6) : environnement de simulation `simulation/` (caméras virtuelles, images de synthèse) et prototype de détection (`detection/dart.py`, `geometry/triangulation.py`). Voir `simulation/README.md`. Photos réelles des trois caméras et zones réelles dans `photos/`, détection mesurée par `tools/detect_photos.py` : 5 zones justes sur 9 (voir `photos/README.md`).
+- Branche `feat/enregistrement-volees` (pas encore fusionnée) : déclenchement à l'impact (`detection/trigger.py`) et enregistrement des volées avec affichage en direct, plein écran (`tools/record_volleys.py`). Séance d'essais : `docs/test-detection.md`. Vérifié avec des caméras simulées seulement.
 - Prochain jalon : soutenance N°2 (1-2 déc. 2026) — détection, score 301 en solo, affichage temps réel.
 
 ## Décisions prises (ne pas remettre en cause sans l'utilisateur)
@@ -53,7 +53,7 @@ Ce qui marche sur le PC n'est pas garanti sur la Pi. En cas d'écart, vérifier 
 
 ## Commandes
 
-Sur PC, Python 3.13 : commandes du jeu, des tests et des outils caméra dans la section « Développement sur PC » du README, en PowerShell (Windows) et en sh (Linux, macOS). Sous Windows, PowerShell 5.1 refuse `&&` et `VAR=valeur commande` : une commande par ligne, variables par `$env:`. Test avec les caméras : `docs/test-calibration.md`.
+Sur PC, Python 3.13 : commandes du jeu, des tests et des outils caméra dans la section « Développement sur PC » du README, en PowerShell (Windows) et en sh (Linux, macOS). Sous Windows, PowerShell 5.1 refuse `&&` et `VAR=valeur commande` : une commande par ligne, variables par `$env:`. Test avec les caméras : `docs/test-calibration.md` (caméras, calibration), `docs/test-detection.md` (séance d'essais de la détection).
 
 Syntaxe des scripts de la Pi (Git Bash ou Linux) : `bash -n system/*.sh`.
 
