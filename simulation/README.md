@@ -15,7 +15,7 @@ Les résultats valent pour des images idéales. Ils montrent que la méthode tie
 - Le code du jeu (`src/dartagnan/`) ne dépend jamais de ce dossier ; la simulation utilise le code du jeu tel quel.
 - Aucune image de synthèse dans `data/captures/`, aucune photo réelle dans `data/simulation/`.
 - Un résultat obtenu ici est toujours présenté comme « en simulation », jamais comme mesuré sur le matériel.
-- La détection par droites projetées (`src/dartagnan/detection/dart.py`, `src/dartagnan/geometry/triangulation.py`) est dans `main` comme prototype : méthode à valider par l'équipe. Premiers essais sur photos réelles : 5 zones justes sur 9 (`photos/README.md`).
+- La détection par droites projetées (`src/dartagnan/detection/dart.py`, `src/dartagnan/geometry/triangulation.py`) est dans `main` comme prototype : méthode à valider par l'équipe. Mesure sur photos réelles : 47 zones justes sur 56 (`photos/README.md`).
 
 ## Hypothèses de la simulation
 

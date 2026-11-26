@@ -108,7 +108,7 @@ Mesure sur toutes les volées enregistrées avec leurs zones :
 
 Résultat dans `data/detection/resultats.md`, avec les images de chaque fléchette. Chaque volée y est recalibrée sur sa propre photo vide : le résultat peut différer légèrement du bilan affiché en direct.
 
-Les volées restent dans `data/captures/`, hors de git (environ 1,5 Mo par volée). Quelques volées représentatives peuvent être copiées dans `photos/`, une par dossier `<date>-serie<n>`, après accord de l'équipe sur la taille.
+Les volées restent dans `data/captures/`, hors de git (environ 1,7 Mo par volée). Les volées utiles peuvent être copiées dans `photos/` ([photos/README.md](../photos/README.md)), après accord de l'équipe sur la taille.
 
 ## Problèmes fréquents
 
