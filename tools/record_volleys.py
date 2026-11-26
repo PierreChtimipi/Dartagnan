@@ -6,11 +6,17 @@ caméras à gauche (grille de la cible calibrée, axe de la dernière fléchette
 une cible de face avec la droite projetée par chaque caméra et les points d'impact, à
 droite la volée en cours et le bilan de la séance.
 
-Démarrer cible vide : Entrée calibre les caméras et ouvre la première volée. Quand
-l'image bouge puis redevient stable, une photo de chaque caméra est prise et la
-fléchette détectée s'affiche (3 par volée au plus). Ensuite : taper les zones réelles
+Démarrer cible vide : Entrée calibre les caméras et ouvre la première volée. Si la
+calibration automatique échoue pour une caméra, ses 4 points placés avec
+calibrate_board.py ($DARTAGNAN_DATA/calibration.json, même numéro de source) servent de
+secours. Quand l'image bouge puis redevient stable, une photo de chaque caméra est prise
+et la fléchette détectée s'affiche (3 par volée au plus). Ensuite : taper les zones réelles
 dans l'ordre (20 T19 D5, 25, Bull, Out), retirer les fléchettes, Entrée : la volée est
 enregistrée et la suivante commence sur la cible vide.
+
+Une photo où aucune caméra ne voit de nouvelle fléchette (passage, ombre) est ignorée.
+Entrée est refusée tant que deux caméras ou plus voient une différence avec la photo
+vide de la volée (fléchettes restées, ombre d'une personne).
 
 Touches : Entrée volée suivante, Suppr annule la dernière fléchette (fausse alerte),
 Retour arrière corrige la saisie, Échap quitte.
@@ -24,6 +30,7 @@ tools/detect_photos.py.
 """
 
 import argparse
+import json
 import os
 import re
 import time
@@ -55,7 +62,7 @@ from dartagnan.geometry.board import (
     dart_at,
     sector_boundary,
 )
-from dartagnan.geometry.calibration import project
+from dartagnan.geometry.calibration import board_to_image, project
 from dartagnan.geometry.triangulation import board_line, intersect
 
 DARTS_PER_VOLLEY = 3
@@ -193,13 +200,30 @@ def label(
     canvas.blit(rendered, pos)
 
 
+def manual_points(
+    path: Path, source: str, shape: tuple[int, ...]
+) -> list[tuple[float, float]] | None:
+    """Les 4 points placés pour cette source avec calibrate_board.py (touche S), None
+    s'ils manquent ou s'ils ont été placés sur une image d'une autre taille."""
+    if not path.exists():
+        return None
+    for camera in json.loads(path.read_text(encoding="utf-8"))["cameras"]:
+        size = (camera.get("height"), camera.get("width"))
+        if (
+            camera["source"] == source
+            and len(camera["points"]) == 4
+            and size == shape[:2]
+        ):
+            return [tuple(p) for p in camera["points"]]
+    return None
+
+
 class Recorder:
     """État de la séance : calibration, volée en cours, saisie, bilan."""
 
-    def __init__(
-        self, cameras: list[Camera], tops: list[float], captures: Path
-    ) -> None:
-        self.cameras, self.tops, self.captures = cameras, tops, captures
+    def __init__(self, cameras: list[Camera], tops: list[float], data: Path) -> None:
+        self.cameras, self.tops = cameras, tops
+        self.captures, self.calibration = data / "captures", data / "calibration.json"
         self.board = board_surface()
         self.homographies: list[np.ndarray] | None = None
         self.shots: list[Shot] = []
@@ -225,11 +249,29 @@ class Recorder:
             self.say("Une caméra ne donne pas d'image : vérifier le branchement.")
             return
         homographies, self.errors = [], []
-        for i, (frame, top) in enumerate(zip(frames, self.tops)):
-            result = detect(color_labels(frame), top=top)
+        for i, (camera, frame, top) in enumerate(zip(self.cameras, frames, self.tops)):
+            labels = color_labels(frame)
+            result = detect(labels, top=top)
+            points = (
+                None
+                if result
+                else manual_points(self.calibration, camera.source, frame.shape)
+            )
+            if points:
+                # Secours : points placés à la main, recalés sur les anneaux si possible,
+                # sinon pris tels quels (écart inconnu, affiché « manuelle »)
+                start = board_to_image(points)
+                result = detect(labels, start) or (start, None, 0)
+                print(
+                    f"Caméra {i + 1} : calibration automatique impossible, "
+                    f"points de {self.calibration} utilisés"
+                )
             pygame.event.pump()  # fenêtre réactive pendant les quelques secondes de calcul
             if result is None:
-                self.say(f"Caméra {i + 1} : cible non trouvée. Vérifier puis Entrée.")
+                self.say(
+                    f"Caméra {i + 1} : cible non trouvée, pas de points manuels. "
+                    "Vérifier puis Entrée."
+                )
                 return
             homographies.append(result[0])
             self.errors.append(result[1])
@@ -273,6 +315,11 @@ class Recorder:
         image_lines = [
             dart_line(b, a, m) for b, a, m in zip(before, frames, self.masks)
         ]
+        if all(line is None for line in image_lines):
+            # Rien de la taille d'une fléchette dans aucune vue : passage, ombre
+            print("Photo ignorée : aucune nouvelle fléchette vue")
+            self.say("Photo ignorée : aucune nouvelle fléchette vue.")
+            return
         board_lines = [
             None if line is None else board_line(h, line)
             for h, line in zip(self.homographies, image_lines)
@@ -318,8 +365,22 @@ class Recorder:
     def next_volley(self) -> None:
         if not self.shots:
             self.say("Aucune fléchette photographiée dans cette volée.")
+            return
+        frames = [c.frame for c in self.cameras]
+        # Comparée à la photo vide de la volée : une caméra seule peut voir un reflet ;
+        # deux ou plus, des fléchettes restées ou l'ombre d'une personne
+        left = [
+            i + 1
+            for i, (e, f, m) in enumerate(zip(self.empty, frames, self.masks))
+            if dart_line(e, f, m) is not None
+        ]
+        if len(left) >= 2:
+            self.say(
+                f"Cible pas vide (caméras {', '.join(map(str, left))}) : "
+                "retirer les fléchettes, s'écarter, Entrée."
+            )
         elif self.save_zones():
-            self.open_volley([c.frame for c in self.cameras])
+            self.open_volley(frames)
 
     def close(self) -> None:
         """Volée vide supprimée, zones de la dernière volée enregistrées si valides."""
@@ -432,7 +493,10 @@ class Recorder:
         canvas.set_clip(None)
         name = f"Caméra {i + 1}   {number(self.rates[i], 0)} img/s"
         if self.homographies is not None:
-            name += f"   calibration {number(self.errors[i])} mm"
+            error = self.errors[i]
+            name += "   calibration " + (
+                "manuelle" if error is None else f"{number(error)} mm"
+            )
         label(canvas, name, (10, y + 8), color)
 
     def draw_impacts(self, canvas: pygame.Surface) -> None:
@@ -583,7 +647,7 @@ def main() -> None:
     pygame.display.set_caption("Dartagnan : volées en direct")
     canvas = pygame.Surface((theme.WIDTH, theme.HEIGHT))
     clock = pygame.time.Clock()
-    recorder = Recorder(cameras, args.top, data / "captures")
+    recorder = Recorder(cameras, args.top, data)
     try:
         while recorder.running:
             for event in pygame.event.get():
